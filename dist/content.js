@@ -4,7 +4,7 @@ export const official='https://conict.seoultech.ac.kr';
 export const pageLinks={
  ...Object.fromEntries(Object.entries(memberProfiles).map(([id,p])=>[id,p.github||p.page||professorSource])),
  m1:'https://sebeen-yoon-research.paul020600.chatgpt.site/',
- m2:'https://sangmin9242.github.io/interactive.html?v=a85d4d2&lang=eng',
+ m2:'https://sangmin9242.github.io/ko.html',
  m7:'https://kenny-0209.github.io/kyeongsoon-orbit/?v=20261018'
 };
 // Keep existing personal sites; other computers open the member's published GitHub.
