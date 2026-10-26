@@ -1,4 +1,4 @@
-import {purposes,grades,timeSlots,researchAreas,todayKST,stepsFor,progressFor,setAnswer,toggleResearch,researchText,validateField,letterRows,configuredEndpoint,sendLetter} from './letter-core.js?v=privacy20261025c';
+import {purposes,grades,timeSlots,researchAreas,todayKST,stepsFor,progressFor,setAnswer,toggleResearch,researchText,validateField,letterRows,configuredEndpoint,sendLetter} from './letter-core.js?v=instant20261026';
 import {letterConfig} from './letter-config.js?v=mail20261025';
 import {consentHTML} from './letter-privacy.js?v=privacy20261025c';
 
@@ -31,7 +31,7 @@ function render({focus=true}={}){
  progress.hidden=intro||done;history.hidden=intro||done||current==='review';
  if(!intro&&!done){const percent=progressFor(current);document.querySelector('#letter-stage').textContent=index<4?'처음 인사':current==='review'?'보내기 전 확인':current==='email'?'답장받을 곳':'당신의 이야기';document.querySelector('#letter-count').textContent=index<4?'01 / 03':['email','review'].includes(current)?'03 / 03':'02 / 03';document.querySelector('#letter-fill').style.width=percent+'%';document.querySelector('.letter-track').setAttribute('aria-valuenow',percent);history.innerHTML=['name','studentId','grade'].filter(key=>steps.indexOf(key)<index&&Object.hasOwn(answers,key)).map(key=>`<button type="button" class="letter-answer-chip" data-edit="${key}" aria-label="${key==='name'?'이름':key==='grade'?'학년':'학번'} 수정"><span>${key==='name'?'이름':key==='grade'?'학년':'학번'}</span>${escapeHTML(answers[key]||'건너뛰었어요')}<i aria-hidden="true">↗</i></button>`).join('')}
  if(intro)view.innerHTML=`<div class="letter-intro"><div class="letter-envelope">${envelope}</div><span class="letter-eyebrow">반가워요, 미래의 동료</span><h2 id="letter-title" tabindex="-1">CONICT에<br>편지 한 통 남겨볼까요?</h2><p>상담하고 싶은 이야기부터<br>함께 해보고 싶은 연구까지.<br>질문을 하나씩, 천천히 드릴게요.</p><button class="letter-next" data-action="start">편지 쓰기 ${arrow}</button><small>아직 연구 주제가 정해지지 않아도 괜찮아요.</small></div>`;
- else if(done)view.innerHTML=`<div class="letter-success"><div class="letter-envelope success-mark" aria-hidden="true">✓</div><span class="letter-eyebrow">THANK YOU FOR YOUR LETTER</span><h2 id="letter-title" tabindex="-1">편지가 접수됐어요.</h2><p>들려주신 이야기를 잘 읽어볼게요.<br>담당자가 확인한 뒤 남겨주신 이메일로 답장드릴게요.</p><a class="letter-next" href="./index.html">연구실 더 둘러보기 ${arrow}</a><button class="letter-text-button" data-action="restart">새 편지 쓰기</button></div>`;
+ else if(done)view.innerHTML=`<div class="letter-success"><div class="letter-envelope success-mark" aria-hidden="true">✓</div><span class="letter-eyebrow">THANK YOU FOR YOUR LETTER</span><h2 id="letter-title" tabindex="-1">편지를 보냈어요.</h2><p>들려주신 이야기를 잘 읽어볼게요.<br>담당자가 확인한 뒤 남겨주신 이메일로 답장드릴게요.</p><a class="letter-next" href="./index.html">연구실 더 둘러보기 ${arrow}</a><button class="letter-text-button" data-action="restart" ${busy?'disabled':''}>새 편지 쓰기</button></div>`;
  else view.innerHTML=`<form id="letter-form" novalidate><div class="letter-question"><span class="letter-kicker">${index<3?'반가워요. 한 가지만 더 알려주세요.':current==='review'?'TO. CONICT LAB':'천천히, 편하게 이야기해주세요.'}</span><h2 id="letter-title" tabindex="-1">${titles[current]}</h2><p class="letter-hint">${hints[current]}</p>${fieldHTML()}<p class="letter-alert" id="letter-error" role="alert" ${alert?'':'hidden'}>${escapeHTML(alert)}</p></div><div class="letter-actions"><button class="letter-back" type="button" data-action="back" aria-label="이전 질문">← 이전</button>${current==='studentId'?'<button class="letter-skip" type="button" data-action="skip">지금은 건너뛰기</button>':''}${['grade','purpose'].includes(current)?'':`<button class="letter-next" id="letter-next" type="submit" ${current==='review'&&!configuredEndpoint(letterConfig)?'disabled':''}>${current==='review'?'편지 보내기':returnToReview?'수정 마치기':'다음'} ${current==='review'?envelope:arrow}</button>`}</div></form>`;
  view.classList.remove('letter-enter');void view.offsetWidth;view.classList.add('letter-enter');
  bindEvents();
@@ -45,10 +45,13 @@ function next(){
 }
 async function submit(){
  if(busy)return;const error=stepsFor(answers).map(key=>validateField(key,answers)).find(Boolean);if(error){showError(error);return}
- busy=true;view.setAttribute('aria-busy','true');view.querySelectorAll('button,input,textarea').forEach(el=>el.disabled=true);const send=view.querySelector('#letter-next');send.textContent='편지를 보내고 있어요…';
- const result=await sendLetter(answers,letterConfig);busy=false;view.removeAttribute('aria-busy');
- if(result.ok){answers={};current='done';alert='';history.innerHTML='';render()}
- else{alert=result.message;render({focus:false});document.querySelector('#letter-error')?.scrollIntoView({block:'nearest'})}
+ if(!configuredEndpoint(letterConfig)){showError('편지함 연결을 준비하고 있어요. 잠시 후 다시 방문해주세요.');return}
+ if(answers.website?.trim()){showError('입력 내용을 확인한 뒤 다시 시도해주세요.');return}
+ const submitted=structuredClone(answers);
+ busy=true;current='done';alert='';history.innerHTML='';render();
+ const result=await sendLetter(submitted,letterConfig);busy=false;
+ if(result.ok){answers={};render({focus:false})}
+ else{answers=submitted;current='review';alert=result.message;render({focus:false});document.querySelector('#letter-error')?.scrollIntoView({block:'nearest'})}
 }
 function bindEvents(){
  view.querySelector('#letter-form')?.addEventListener('submit',event=>{event.preventDefault();if(!busy)(current==='review'?submit():next())});

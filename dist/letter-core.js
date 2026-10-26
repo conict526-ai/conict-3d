@@ -53,7 +53,7 @@ export async function sendLetter(a,config,fetcher=fetch,{timeoutMs=25000}={}){
  if(payload._gotcha)return {ok:false,kind:'validation',message:'입력 내용을 확인한 뒤 다시 시도해주세요.'};
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
-  const response=await fetcher(config.endpoint,{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal,credentials:'omit',referrerPolicy:'strict-origin-when-cross-origin'});
+  const response=await fetcher(config.endpoint,{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal,credentials:'omit',keepalive:true,referrerPolicy:'strict-origin-when-cross-origin'});
   let body;try{body=await response.json()}catch{}
   if(response.ok&&body?.ok===true)return {ok:true};
   if(response.status===429)return {ok:false,kind:'limit',message:'편지가 잠시 몰리고 있어요. 조금 기다렸다가 다시 보내주세요.'};
