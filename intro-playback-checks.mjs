@@ -57,22 +57,33 @@ function mount({reduced=false,seen=false,hidden=false}={}){
 
 {
  const t=mount();assert(t.poster.hidden,'first paint must not show the complete fallback logo');
- t.playing();t.frame(3.4);assert(t.video.paused,'hold the assembled logo while the room loads');
- t.video.emit('waiting');t.video.emit('stalled');t.tick(30000);
- assert(t.poster.hidden,'a long scene load must not trigger a media fallback');
- assert.equal(t.loader.dataset.introState,'loading');assert(t.house.inert);
- t.ready();assert(!t.video.paused,'resume the upward animation when the room is ready');t.playing();
- for(const time of [3.65,4.8,5.85,6.99]){
-  t.frame(time);assert.equal(t.loader.dataset.introState,'loading','wait for the full media ending');assert(t.house.inert);
+ t.playing();
+ for(let cycle=1;cycle<=5;cycle++){
+  for(const time of [2.5,3.4,4.8,6.99]){
+   t.frame(time);assert(!t.video.paused,'loading must never freeze the completed logo');
+   assert.equal(t.video.currentTime,time,'loading must never seek to the start of disassembly');
+  }
+  t.tick(7000);t.ended();
+  assert.equal(t.video.currentTime,0,'each repeat must restart from incoming pieces');
+  assert.equal(t.loader.dataset.introCycle,String(cycle+1));
+  assert.equal(t.loader.dataset.introState,'loading');assert(t.house.inert);t.playing();
  }
+ assert(t.poster.hidden,'35 seconds of healthy looping must not trigger a media fallback');
+ t.frame(4.8);const playCalls=t.video.playCalls;t.ready();
+ assert.equal(t.video.playCalls,playCalls,'scene readiness must not start a separate exit animation');
+ assert.equal(t.video.currentTime,4.8,'scene readiness must not rewind or skip the current cycle');
+ assert(!t.video.paused);t.frame(6.99);assert(t.house.inert);
  t.tick(15000);assert(t.poster.hidden,'healthy playback must not have a wall-clock cutoff');
  t.ended();assert.equal(t.loader.dataset.introState,'leaving');assert(t.house.inert);
  t.tick(360);assert(t.loader.hidden);assert(!t.house.inert);
 }
-{
- const t=mount();t.ready();t.playing();t.frame(6.99);
+for(const phaseTime of [0.2,1.5,2.8,3.4,4.8,6.99]){
+ const t=mount();t.playing();t.frame(phaseTime);const playCalls=t.video.playCalls;t.ready();
+ assert.equal(t.video.currentTime,phaseTime,'readiness at any phase preserves current playback');
+ assert.equal(t.video.playCalls,playCalls,'no new playback on readiness');assert(!t.video.paused);
+ t.frame(6.99);
  assert(!t.loader.hidden);assert(t.house.inert,'a cached room must still wait for the animation');
- t.ended();t.tick(360);assert(t.loader.hidden);
+ t.ended();t.tick(360);assert(t.loader.hidden);assert.equal(t.loader.dataset.introCycle,'1','do not add an extra cycle before entering');
 }
 {
  const t=mount({hidden:true});assert.equal(t.video.playCalls,0);t.tick(30000);assert(t.poster.hidden);
@@ -93,6 +104,11 @@ function mount({reduced=false,seen=false,hidden=false}={}){
  const t=mount();t.playing();t.ready();t.skip.emit('click');t.tick(360);assert(t.loader.hidden);
 }
 {
+ const t=mount();t.playing();t.skip.emit('click');const playCalls=t.video.playCalls;t.ended();
+ assert.equal(t.video.playCalls,playCalls,'an ended event after skip must not restart the video');
+ assert(t.house.inert);t.ready();t.tick(360);assert(t.loader.hidden);
+}
+{
  const t=mount();t.video.emit('error');assert(!t.poster.hidden);assert(t.house.inert);
  t.ready();t.tick(360);assert(t.loader.hidden);
 }
@@ -100,4 +116,4 @@ for(const options of [{reduced:true},{seen:true}]){
  const t=mount(options);assert.equal(t.video.playCalls,0);assert(!t.poster.hidden);
  t.ready();t.tick(360);assert(t.loader.hidden);assert(!t.house.inert);
 }
-console.log('PASS: actual intro controller waits for ended, survives 30s loading and hidden tabs, starts without a logo flash, and preserves skip/media fallbacks');
+console.log('PASS: full cycles loop throughout 35s loading, readiness never pauses/seeks/replays, the current cycle ends before opening, and hidden-tab/skip/media fallbacks remain safe');

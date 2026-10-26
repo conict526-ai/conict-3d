@@ -11,16 +11,15 @@ function mountIntro(){
  const seenKey='conict-intro-20261026',force=new URLSearchParams(location.search).get('intro')==='1';
  let seen=false;try{seen=sessionStorage.getItem(seenKey)==='1'&&!force;}catch{}
  const aborter=new AbortController(),listen=(target,type,fn)=>target?.addEventListener(type,fn,{signal:aborter.signal});
- let animationTimer=0,sceneTimer=0,closeTimer=0,frameRequest=0,heldForScene=false;
- const holdTime=3.4;
+ let animationTimer=0,sceneTimer=0,closeTimer=0,frameRequest=0;
  const gate=createIntroGate({onClose:close,onFailure:fail});
  window.CONICTIntro={ready,fail:()=>gate.fail(),skip:()=>skipAnimation()};
- loader.dataset.introState='loading';
+ loader.dataset.introState='loading';loader.dataset.introCycle='1';
 
  function clearWatchdogs(){clearTimeout(animationTimer);clearTimeout(sceneTimer);}
  function waitForPlayback(){
   clearTimeout(animationTimer);
-  if(!document.hidden&&!heldForScene&&!gate.closed&&!gate.failed&&!gate.animationDone)
+  if(!document.hidden&&!gate.closed&&!gate.failed&&!gate.animationDone)
    animationTimer=setTimeout(staticFallback,12000);
  }
  function playVideo(){
@@ -66,9 +65,6 @@ function mountIntro(){
   clearTimeout(sceneTimer);house.dataset.sceneReady='true';
   status.textContent='곧 연구실 문이 열립니다.';
   gate.ready();
-  if(heldForScene&&!gate.closed){
-   heldForScene=false;if(!document.hidden)playVideo();
-  }
  }
  function skipAnimation(){
   clearTimeout(animationTimer);
@@ -79,18 +75,12 @@ function mountIntro(){
  function watchProgress(){
   if(gate.closed||gate.failed||gate.animationDone)return;
   loader.dataset.introPhase=video.currentTime<2.5?'assembling':video.currentTime<3.65?'complete':'disassembling';
-  if(!gate.sceneReady&&video.currentTime>=holdTime){
-   clearTimeout(animationTimer);
-   heldForScene=true;video.pause();video.currentTime=holdTime;
-   status.textContent='연구실을 불러오고 있어요.';
-   return;
-  }
  }
  function watchFrames(){
   if(!video.requestVideoFrameCallback||frameRequest||gate.closed||gate.failed||gate.animationDone)return;
   frameRequest=video.requestVideoFrameCallback(()=>{
    frameRequest=0;watchProgress();
-   if(!heldForScene)watchFrames();
+   watchFrames();
   });
  }
  listen(skip,'click',skipAnimation);
@@ -100,7 +90,14 @@ function mountIntro(){
  listen(document.querySelector('#scene-script'),'error',()=>gate.fail());
  listen(video,'error',staticFallback);
  listen(video,'ended',()=>{
-  clearTimeout(animationTimer);loader.dataset.introPhase='finished';gate.done();
+  if(gate.closed||gate.failed||gate.animationDone)return;
+  clearTimeout(animationTimer);
+  if(gate.sceneReady){loader.dataset.introPhase='finished';gate.done();}
+  else{
+   video.currentTime=0;loader.dataset.introPhase='assembling';
+   loader.dataset.introCycle=String(Number(loader.dataset.introCycle)+1);
+   if(!document.hidden)playVideo();
+  }
  });
  listen(video,'timeupdate',watchProgress);
  listen(video,'playing',()=>{clearTimeout(animationTimer);watchFrames();});
@@ -109,7 +106,7 @@ function mountIntro(){
  listen(document,'visibilitychange',()=>{
   if(gate.closed||gate.failed||gate.animationDone||reduced||seen)return;
   if(document.hidden){clearTimeout(animationTimer);video.pause();}
-  else if(!heldForScene)playVideo();
+  else playVideo();
  });
  listen(window,'pagehide',()=>{clearWatchdogs();clearTimeout(closeTimer);stopVideo();});
  sceneTimer=setTimeout(()=>{
