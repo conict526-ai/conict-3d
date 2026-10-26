@@ -13,4 +13,3 @@ export function createIntroGate({onClose=()=>{},onFailure=()=>{}}={}){
   get failed(){return failed;}
  };
 }
-

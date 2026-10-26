@@ -112,4 +112,3 @@ function mountIntro(){
  }
  if(house.dataset.sceneReady==='true')ready();
 }
-

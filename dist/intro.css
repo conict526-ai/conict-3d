@@ -31,4 +31,3 @@
  #loader .intro-skip{right:20px;bottom:max(26px,env(safe-area-inset-bottom))}
 }
 @media(prefers-reduced-motion:reduce){#loader{transition:none}}
-

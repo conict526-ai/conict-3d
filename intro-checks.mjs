@@ -43,4 +43,3 @@ assert(visit.indexOf("window.dispatchEvent(new Event('conict-scene-ready'))")>vi
 assert(!visit.includes("resize();$('#loader').hidden=true"));
 for(const file of ['logo-cycle.mp4','logo-cycle.webm','logo-poster.webp'])assert(existsSync(new URL('./dist/assets/intro/'+file,import.meta.url)));
 console.log('PASS: first-render readiness, both event orders, skip, reduced/static fallback, failure, duplicate events, inert placement and local media');
-
