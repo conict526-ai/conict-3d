@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>건축 ICT연구실 · CONICT 오픈하우스</title>
+<meta name="description" content="서울과학기술대학교 건축 ICT연구실(CONICT)에 오신 것을 환영합니다. 3D 안내 투어와 자유로운 산책으로 공간과 구성원을 만나세요.">
+<script>function openStudio(){if(['#edit','#furniture','#people','#network'].includes(location.hash))location.replace('./studio.html'+location.hash)}addEventListener('hashchange',openStudio);openStudio();</script>
+<link rel="stylesheet" href="./visit.css?v=objects20261024">
+<link rel="stylesheet" href="./mobile.css?v=desktop20261024">
+<link rel="stylesheet" href="./letter-entry.css?v=20261025">
+<link rel="stylesheet" href="./intro.css?v=20261026">
+<script type="module" src="./mobile-ui.js?v=desktop20261024"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module" src="./intro.js?v=20261026"></script>
+</head>
+<body>
+<section id="loader" role="dialog" aria-modal="true" aria-labelledby="intro-title" aria-describedby="intro-status">
+ <div class="intro-visual">
+  <video id="intro-video" muted playsinline preload="none" poster="./assets/intro/logo-poster.webp" aria-hidden="true">
+   <source src="./assets/intro/logo-cycle.webm" type="video/webm">
+   <source src="./assets/intro/logo-cycle.mp4" type="video/mp4">
+  </video>
+  <img class="intro-poster" src="./assets/intro/logo-poster.webp" alt="" hidden>
+ </div>
+ <div class="intro-bottom">
+  <h2 id="intro-title">CONICT OPEN HOUSE</h2>
+  <p id="intro-status" role="status" aria-live="polite">연구실 문을 열고 있어요.</p>
+  <div class="intro-recovery" hidden><button type="button">다시 불러오기</button><a href="https://conict.seoultech.ac.kr/index.do">공식 연구실 홈페이지 ↗</a></div>
+ </div>
+ <button class="intro-skip" type="button">건너뛰기 ↗</button>
+</section>
+<main id="house" inert aria-busy="true">
+ <canvas id="world" tabindex="0" aria-label="연구실 3D 공간. 전체보기에서는 드래그로 회전, 걷기에서는 WASD 또는 방향키로 시선 기준 앞뒤와 좌우로 이동하고 드래그로 시선을 바꿉니다."></canvas>
+ <header class="topbar">
+  <button class="brand" id="home" aria-label="연구실 전체보기"><span class="brand-mark">◈</span><span>CONICT<small>OPEN HOUSE · 501 / 526</small></span></button>
+  <nav aria-label="연구실 메뉴"><button id="about-button">연구실 소개</button><button id="people-button">구성원</button><button id="album-button">앨범</button><a href="./studio.html#edit" class="studio-link" hidden>공간 편집 ↗</a></nav>
+ </header>
+ <aside id="weather-strip" class="weather-strip" aria-label="연구실 시간과 날씨">
+  <button id="weather-toggle" class="weather-toggle" aria-expanded="false" aria-controls="weather-details"><span class="weather-place">공릉동 · KST</span><time id="lab-clock">--:--</time><span id="weather-summary">날씨 연결 중</span><span class="weather-chevron">⌄</span></button>
+  <div id="weather-details" class="weather-details" hidden><b id="weather-date"></b><span id="weather-source">날씨 연결 대기</span><span id="weather-wind"></span><p>서울과기대 주변 날씨에 맞춰 낮·밤 조명과 실외 비·눈을 표현합니다.</p><div><a href="https://open-meteo.com/" target="_blank" rel="noopener">날씨 데이터: Open-Meteo ↗</a><button id="weather-refresh">새로고침 ↻</button></div></div>
+ </aside>
+ <section class="welcome" id="welcome">
+  <span class="eyebrow"><i></i> THE DOOR IS OPEN</span>
+  <h1>어서오세요,<br>CONICT 연구실입니다<span>.</span></h1>
+  <p>사람과 생각이 모이는 작은 공간.<br>손님이 되어 천천히 둘러보세요.</p>
+  <button id="enter-button" class="primary">손님으로 들어가기 <span>↗</span></button>
+  <div class="welcome-foot"><span>서울과학기술대학교</span><b>건축 ICT연구실</b></div>
+ </section>
+ <div id="room-tags" aria-label="공간 안내"></div>
+ <a class="letter-cta" id="letter-button" href="./letter.html" aria-label="CONICT 연구실에 편지 쓰기 · 상담, 문의, 연구 참여"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6" stroke-linejoin="round"/></svg><span><b><span class="letter-cta-prefix">연구실에 </span>편지 쓰기</b><small>상담 · 질문 · 함께하는 연구</small></span><span class="letter-cta-arrow" aria-hidden="true">↗</span></a>
+ <div id="door-tags" role="group" aria-label="문 열고 닫기"></div>
+ <div id="hover-label" hidden></div>
+ <aside id="tour-card" class="context-card" hidden aria-live="polite"></aside>
+ <div class="scene-note" id="scene-note"><span class="dot"></span> 작은 공간에서 만나는 CONICT <small>소개를 위한 가상 아바타</small></div>
+ <div id="walk-hud" hidden>
+  <div class="walk-location"><span class="dot"></span><span id="location-label">연구원 공간</span><small>손님으로 걷는 중</small></div>
+  <button id="nearby" class="nearby" hidden></button>
+  <div class="walk-help">WASD / ↑↓ 앞뒤 · ←→ 좌우 · 드래그로 시선 · E 상호작용<br><span>바닥 클릭으로 걷기 · ↶ ↷ 시선 회전</span></div>
+  <div class="walk-pad" aria-label="손님 이동 버튼"><button data-walk="forward" aria-label="앞으로 걷기">↑</button><button data-walk="left" aria-label="왼쪽으로 걷기">←</button><button data-walk="back" aria-label="뒤로 걷기">↓</button><button data-walk="right" aria-label="오른쪽으로 걷기">→</button></div>
+  <div class="look-pad"><button data-look="left" aria-label="왼쪽 바라보기">↶</button><button data-look="right" aria-label="오른쪽 바라보기">↷</button></div>
+  <div class="minimap"><span>지금 여기에</span><svg id="minimap" role="img" aria-label="방 구조와 현재 손님 위치"></svg></div>
+ </div>
+ <footer class="experience-bar">
+  <div class="tour-anchor">
+   <div id="tour-menu" class="tour-menu" hidden><div class="menu-heading"><span>RESEARCH LAB TOUR</span><b>어디부터 둘러볼까요?</b></div><div id="tour-list"></div></div>
+   <button id="tour-toggle" class="tour-toggle" aria-expanded="false" aria-controls="tour-menu">연구실 투어 <span>›</span></button>
+  </div>
+  <div class="view-switch" role="group" aria-label="방문 시점"><button data-view="overview" aria-pressed="true">◇ 전체보기</button><button data-view="first" aria-pressed="false">1인칭</button><button data-view="third" aria-pressed="false">3인칭</button></div>
+  <button id="help-button" class="help-button" aria-label="둘러보기 도움말">?</button>
+ </footer>
+ <div id="toast" class="toast" role="status" hidden></div>
+ <div id="portal-flash" aria-hidden="true"></div>
+</main>
+<dialog id="panel" aria-labelledby="panel-title"><div class="panel-top"><span id="panel-kicker"></span><button id="panel-close" class="close" aria-label="창 닫기">×</button></div><div id="panel-body"></div></dialog>
+<dialog id="lightbox" aria-labelledby="photo-caption"><button id="photo-close" class="close" aria-label="사진 닫기">×</button><img id="photo-large" alt=""><div class="photo-footer"><button id="photo-prev" aria-label="이전 사진">←</button><p id="photo-caption"></p><button id="photo-next" aria-label="다음 사진">→</button></div></dialog>
+<noscript>3D 연구실을 보려면 JavaScript가 필요합니다. <a href="https://conict.seoultech.ac.kr/index.do">공식 연구실 홈페이지</a></noscript>
+<script type="module" id="scene-script" src="./visit-intro.js?v=intro20261026"></script>
+</body></html>
