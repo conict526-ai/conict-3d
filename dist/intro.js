@@ -68,6 +68,7 @@ function mountIntro(){
  }
  function watchProgress(){
   if(gate.closed||gate.failed||gate.animationDone)return;
+  loader.dataset.introPhase=video.currentTime<2.5?'assembling':video.currentTime<3.65?'complete':'disassembling';
   if(!gate.sceneReady&&video.currentTime>=holdTime){
    heldForScene=true;video.pause();video.currentTime=holdTime;
    status.textContent='연구실을 불러오고 있어요.';

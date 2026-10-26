@@ -62,7 +62,7 @@ function clearHover(){
 }
 
 
-function showFailure(){const loader=$('#loader');loader.innerHTML='<b>3D 공간을 열 수 없어요</b><small>브라우저의 그래픽 가속을 확인해 주세요.</small><a href="'+official+'/index.do">공식 연구실 홈페이지 ↗</a>'}
+function showFailure(){const loader=document.querySelector('#loader');if(window.CONICTIntro){window.CONICTIntro.fail();return}loader.dataset.sceneState='error';loader.dataset.introState='error';loader.innerHTML='<div class="intro-bottom"><h2 id="intro-title">3D 화면을 열 수 없어요</h2><p id="intro-status">브라우저의 그래픽 설정을 확인해 주세요.</p><a href='+JSON.stringify(official+'/index.do')+'>공식 연구실 홈페이지 ↗</a></div>'}
 function toast(text){$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,3600)}
 // Visitor walls keep their full 3 m height in every camera mode and tour.
 function setTourMenu(open){$('#tour-menu').hidden=!open;$('#tour-toggle').setAttribute('aria-expanded',String(open))}
@@ -270,7 +270,7 @@ $('#minimap').setAttribute('viewBox',[bounds.minX-.2,bounds.minZ-.2,bounds.maxX-
 const atmosphere=createAtmosphere({scene,renderer,sun,hemisphere,ground,layout,onInvalidate:({shadows})=>{dirty=true;if(shadows)shadowDirty=true}});
 const weatherClient=mountWeather(atmosphere);
 const profiler=createProfiler(renderer,'visitor',()=>mode);
-let lastStep=0;
+let lastStep=0,sceneReadyAnnounced=false;
 function tick(now){if(disposed)return;requestAnimationFrame(tick);if(document.hidden){lastTime=now;return}if(now-lastStep<33)return;lastStep=now;const frameElapsed=Math.max(0,(now-lastTime)/1000),dt=Math.min(frameElapsed,.06);lastTime=now;const perfStart=profiler.begin();let rendered=false;
  if(doors.tick(dt)){dirty=shadowDirty=true;lastWalkView=null}
  if(entry){if(!entry.done)dirty=shadowDirty=true;updateEntry(now)}else if(fly){dirty=true;const t=Math.min((now-fly.start)/fly.duration,1),u=ease(t);camera.position.lerpVectors(fly.from,fly.to,u);controls.target.lerpVectors(fly.look,fly.target,u);camera.fov=T.MathUtils.lerp(fly.fov,fly.nextFov,u);camera.updateProjectionMatrix();camera.lookAt(controls.target);if(t===1){const after=fly.after;fly=null;controls.enabled=mode==='overview';after?.()}}
@@ -287,11 +287,11 @@ function tick(now){if(disposed)return;requestAnimationFrame(tick);if(document.hi
  if(dirty)for(const tag of doorTagNodes){const p=tag.point.clone().project(camera);tag.el.style.left=(p.x*.5+.5)*house.clientWidth+'px';tag.el.style.top=(-p.y*.5+.5)*house.clientHeight+'px';tag.el.hidden=mode!=='overview'||tourIndex>=0||p.z>1||p.z< -1}
  if(dirty)for(const tag of roomTagNodes){const p=tag.point.clone().project(camera);tag.el.style.left=(p.x*.5+.5)*house.clientWidth+'px';tag.el.style.top=(-p.y*.5+.5)*house.clientHeight+'px';tag.el.hidden=mode!=='overview'||tourIndex>=0||p.z>1}
  if(targetOutline.update())dirty=true;
- if(dirty){renderer.shadowMap.needsUpdate=shadowDirty;renderer.render(scene,camera);rendered=true;dirty=shadowDirty=false}
+ if(dirty){renderer.shadowMap.needsUpdate=shadowDirty;renderer.render(scene,camera);rendered=true;dirty=shadowDirty=false;if(!sceneReadyAnnounced){sceneReadyAnnounced=true;house.dataset.sceneReady='true';window.dispatchEvent(new Event('conict-scene-ready'));if(!window.CONICTIntro)setTimeout(()=>{if(!window.CONICTIntro){document.querySelector('#loader').hidden=true;house.inert=false;house.removeAttribute('aria-busy')}},1000)}}
  profiler.end(perfStart,rendered);
 }
 window.addEventListener('lab-visual-change',()=>dirty=shadowDirty=true);canvas.addEventListener('webglcontextrestored',()=>dirty=shadowDirty=true);
-document.addEventListener('visibilitychange',()=>{lastTime=performance.now()});window.addEventListener('resize',resize);window.addEventListener('storage',e=>{if(['conict-layout-v1','conict-seat-members'].includes(e.key))toast('편집한 배치가 저장되었어요. 새로고침하면 홈페이지에도 반영됩니다.')});resize();$('#loader').hidden=true;requestAnimationFrame(tick);
+document.addEventListener('visibilitychange',()=>{lastTime=performance.now()});window.addEventListener('resize',resize);window.addEventListener('storage',e=>{if(['conict-layout-v1','conict-seat-members'].includes(e.key))toast('편집한 배치가 저장되었어요. 새로고침하면 홈페이지에도 반영됩니다.')});resize();requestAnimationFrame(tick);
 window.addEventListener('pagehide',()=>{disposed=true;weatherClient.close();atmosphere.dispose();ceiling.dispose();targetOutline.dispose();renderer.dispose()});
 
 mountPCPanel({items:[...interactives.values()],motion:pcMotion,openPanel,panel});
