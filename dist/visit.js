@@ -3,7 +3,7 @@ import {createProfiler} from './perf.js';
 import {batchStaticRoom} from './static-batch.js';
 import * as T from './vendor/three.module.js';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {room,kit} from './models.js';
+import {room,kit} from './models.js?v=ivory20261027';
 import {members,seats,furniture} from './data.js';
 import {loadLayout,contains,planBounds,openingPosition,footprints} from './layout.js?v=objects20261024';
 import {seatView} from './camera.js';

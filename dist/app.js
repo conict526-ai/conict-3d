@@ -2,7 +2,7 @@ import {createProfiler} from './perf.js';
 import * as T from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {GLTFExporter} from './vendor/GLTFExporter.js';
-import {kit,room,makeFurniture,avatar} from './models.js';
+import {kit,room,makeFurniture,avatar} from './models.js?v=ivory20261027';
 import {members,seats as originalSeats,furniture,demoStates,SEAT_REVISION} from './data.js';
 import {loadLayout,validateLayout,planBounds,roomBounds} from './layout.js';
 import {createEditor} from './editor.js';
